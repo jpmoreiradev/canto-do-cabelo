@@ -1,0 +1,120 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import type { QueueEntry } from '@/lib/types'
+import { calcMinutes, formatMinutes } from '@/lib/services'
+
+interface QueueStateDB {
+  entries: QueueEntry[]
+  lastCalledId: string | null
+}
+
+export default function FilaPage() {
+  const [state, setState] = useState<QueueStateDB | null>(null)
+
+  useEffect(() => {
+    async function fetch_() {
+      const res = await fetch('/api/queue')
+      if (res.ok) setState(await res.json())
+    }
+    fetch_()
+    const id = setInterval(fetch_, 3000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (!state) {
+    return (
+      <main className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <p className="text-zinc-600 animate-pulse">Carregando fila...</p>
+      </main>
+    )
+  }
+
+  const called = state.entries.find((e) => e.id === state.lastCalledId)
+  const waiting = state.entries.filter((e) => e.status === 'waiting')
+
+  return (
+    <main className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        {/* Header */}
+        <div className="text-center">
+          <span className="text-4xl">✂️</span>
+          <h1 className="text-2xl font-black text-zinc-100 mt-2">Canto do Cabelo</h1>
+          <p className="text-zinc-500 text-sm mt-1">Fila de espera</p>
+        </div>
+
+        {/* Chamando agora */}
+        {called && (
+          <div className="bg-amber-500/10 border-2 border-amber-500 rounded-2xl p-5 text-center animate-pulse-slow">
+            <p className="text-amber-400/70 text-xs uppercase tracking-widest mb-1">
+              Chamando agora
+            </p>
+            <p className="text-6xl font-black text-amber-400 leading-none">1º</p>
+            <p className="text-xl font-bold text-zinc-100 mt-2">{called.name}</p>
+            {calcMinutes(called.services) > 0 && (
+              <p className="text-zinc-500 text-sm mt-1">
+                {formatMinutes(calcMinutes(called.services))}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Fila */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
+            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+              Aguardando
+            </h2>
+            <span className="text-xs text-zinc-600">{waiting.length} na fila</span>
+          </div>
+
+          {waiting.length === 0 ? (
+            <p className="text-zinc-600 text-center py-10">Fila vazia</p>
+          ) : (
+            <div>
+              {waiting.map((e, i) => {
+                const waitBefore = waiting
+                  .slice(0, i)
+                  .reduce((s, w) => s + calcMinutes(w.services), 0)
+                const totalWait = waitBefore + calcMinutes(e.services)
+
+                return (
+                  <div
+                    key={e.id}
+                    className="flex items-center gap-4 px-5 py-4 border-b border-zinc-800/60 last:border-0"
+                  >
+                    {/* Posição */}
+                    <div className="flex flex-col items-center w-10 shrink-0">
+                      <span className="text-2xl font-black text-amber-400 leading-none">
+                        {i + 1}º
+                      </span>
+                    </div>
+
+                    {/* Nome */}
+                    <span className="text-zinc-100 font-medium flex-1 truncate">{e.name}</span>
+                    {i === 0 && (
+                      <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">
+                        em breve
+                      </span>
+                    )}
+
+                    {/* Tempo estimado */}
+                    {totalWait > 0 && (
+                      <span className="text-zinc-500 text-sm shrink-0">
+                        espera {formatMinutes(totalWait)}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <p className="text-center text-xs text-zinc-700">
+          Atualiza automaticamente a cada 3 segundos
+        </p>
+      </div>
+    </main>
+  )
+}

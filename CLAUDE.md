@@ -28,6 +28,7 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 ```
 
 O `.env` é uma cópia do `.env.local` necessária para o CLI do Prisma funcionar.
+Ambos estão no `.gitignore` (`.env*`) — nunca são commitados.
 
 ## Páginas
 
@@ -41,8 +42,8 @@ O `.env` é uma cópia do `.env.local` necessária para o CLI do Prisma funciona
 
 ## Fluxo de uso
 
-1. Cliente chega → admin acessa `/admin` e adiciona o nome
-2. Sistema gera ticket sequencial e exibe o link de acompanhamento
+1. Cliente chega → admin acessa `/admin` e adiciona o nome + seleciona os serviços
+2. Sistema gera número de posição sequencial e exibe o link de acompanhamento
 3. Admin copia o link e manda pro cliente (WhatsApp etc.)
 4. Cliente abre o link no celular e acompanha sua posição
 5. Admin clica "Chamar Próximo" → TV atualiza, cliente vê "É a sua vez!"
@@ -50,10 +51,27 @@ O `.env` é uma cópia do `.env.local` necessária para o CLI do Prisma funciona
 
 ## Proteção do admin
 
-- Middleware (`middleware.ts`) bloqueia `/admin/*` e `POST /api/queue*` sem sessão válida
+- `proxy.ts` (equivalente ao middleware no Next.js 16) bloqueia `/admin/*` e `POST /api/queue*` sem sessão válida
+- **ATENÇÃO:** No Next.js 16 o arquivo se chama `proxy.ts` (não `middleware.ts`) e exporta `export async function proxy()`
 - Login via `POST /api/auth/login` com `{ password }` → seta cookie `session` (httpOnly, 12h)
 - Logout via `POST /api/auth/logout` → apaga o cookie
 - Senha configurada em `ADMIN_PASSWORD` no `.env.local`
+
+## Serviços disponíveis (`lib/services.ts`)
+
+| ID | Nome | Duração |
+|---|---|---|
+| `corte` | Corte de Cabelo | 30 min |
+| `barba` | Barba | 20 min |
+| `sobrancelha` | Sobrancelha | 15 min |
+| `hidratacao` | Hidratação | 25 min |
+| `relaxamento` | Relaxamento | 40 min |
+| `coloracao` | Coloração | 60 min |
+
+- Admin seleciona os serviços ao adicionar o cliente
+- Tempo estimado calculado em tempo real no formulário
+- TV mostra tempo acumulado de espera por posição (sem revelar os serviços)
+- Admin vê os serviços e tempo estimado na lista da fila
 
 ## Banco de dados (Prisma + Neon)
 
@@ -65,6 +83,7 @@ model QueueEntry {
   name      String      @db.VarChar(100)
   ticket    Int
   status    EntryStatus @default(waiting)   // waiting | called | served
+  services  String[]    @default([])        // IDs dos serviços selecionados
   createdAt DateTime    @default(now())
   calledAt  DateTime?
 }
@@ -89,14 +108,15 @@ npx prisma generate                             # regenerar o client
 ### Migrations
 
 - `prisma/migrations/20260505_init/migration.sql` — criação inicial das tabelas
+- `prisma/migrations/20260505_add_services/migration.sql` — coluna `services TEXT[]`
 
 ## Estrutura de arquivos
 
 ```
 app/
   page.tsx                    — redirect para /tv
-  tv/page.tsx                 — tela da TV (polling)
-  acompanhar/page.tsx         — acompanhamento do cliente (polling)
+  tv/page.tsx                 — tela da TV (polling 3s, mostra tempo estimado)
+  acompanhar/page.tsx         — acompanhamento do cliente (polling 3s)
   admin/
     page.tsx                  — painel do atendente (protegido)
     login/page.tsx            — tela de login
@@ -112,12 +132,15 @@ app/
 lib/
   db.ts                       — Prisma Client singleton + initDB()
   auth.ts                     — signToken / verifyToken / getSession
-  types.ts                    — interface QueueEntry
-middleware.ts                 — proteção de rotas admin e APIs
+  types.ts                    — interface QueueEntry (inclui services: string[])
+  services.ts                 — SERVICES[], calcMinutes(), formatMinutes()
+proxy.ts                      — proteção de rotas (Next.js 16 usa proxy.ts, não middleware.ts)
 instrumentation.ts            — roda initDB() na inicialização do servidor
 prisma/
   schema.prisma
   migrations/
+    20260505_init/
+    20260505_add_services/
 ```
 
 ## Decisões técnicas
@@ -127,6 +150,15 @@ prisma/
 - **Ticket sequencial via `$queryRaw`** — UPDATE atômico no `queue_config` evita race condition
 - **Prisma Client singleton** — padrão recomendado para Next.js dev (evita múltiplas instâncias com hot reload)
 - **`initDB()` no `instrumentation.ts`** — garante que as linhas de config existem sem migration manual
+- **`proxy.ts` em vez de `middleware.ts`** — Next.js 16 renomeou o arquivo de middleware, exporta `proxy` em vez de `middleware`
+- **`.env*` no .gitignore** — credenciais nunca são commitadas
+
+## Segurança — estado atual
+
+- `.env` e `.env.local` estão no `.gitignore`, nunca vão para o repositório ✅
+- Rotas admin protegidas por JWT via `proxy.ts` ✅
+- Cookie httpOnly (protegido contra XSS) ✅
+- Senha do admin em variável de ambiente, não hardcoded ✅
 
 ## Próximas ideias
 
@@ -135,3 +167,5 @@ prisma/
 - Histórico por data (filtro no admin)
 - Notificação push quando for chamado (PWA)
 - Multi-atendente (mais de uma cadeira)
+- Rate limiting no login (proteger contra brute force)
+- Validar UUID nos endpoints de entrada

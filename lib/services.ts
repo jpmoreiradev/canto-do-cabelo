@@ -3,7 +3,6 @@ export const SERVICES = [
   { id: 'barba',       label: 'Barba',            minutes: 20, emoji: '🪒' },
   { id: 'sobrancelha', label: 'Sobrancelha',      minutes: 15, emoji: '✨' },
   { id: 'hidratacao',  label: 'Hidratação',        minutes: 25, emoji: '💧' },
-  { id: 'relaxamento', label: 'Relaxamento',       minutes: 40, emoji: '🌿' },
   { id: 'coloracao',   label: 'Coloração',         minutes: 60, emoji: '🎨' },
 ] as const
 

@@ -113,6 +113,13 @@ export default function AdminPage() {
           </div>
           <div className="flex gap-2">
             <a
+              href="/fila"
+              target="_blank"
+              className="text-sm text-zinc-400 border border-zinc-700 px-3 py-1.5 rounded-lg hover:border-zinc-500 transition-colors"
+            >
+              Fila
+            </a>
+            <a
               href="/tv"
               target="_blank"
               className="text-sm text-amber-400 border border-zinc-700 px-3 py-1.5 rounded-lg hover:border-amber-500 transition-colors"
@@ -279,7 +286,7 @@ export default function AdminPage() {
           {callLoading
             ? 'Chamando...'
             : waiting.length > 0
-              ? `Chamar Próximo — Nº ${waiting[0]?.ticket}`
+              ? 'Chamar Próximo'
               : 'Fila Vazia'}
         </button>
 
@@ -293,11 +300,11 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-1">
               {waiting.map((e, i) => {
-                const waitMin = waiting.slice(0, i).reduce((s, w) => s + calcMinutes(w.services), 0)
+                const waitBefore = waiting.slice(0, i).reduce((s, w) => s + calcMinutes(w.services), 0)
+                const totalWait = waitBefore + calcMinutes(e.services)
                 return (
                   <div key={e.id} className="flex items-center gap-3 py-2.5 border-b border-zinc-800 last:border-0">
-                    <span className="text-zinc-600 text-sm w-5 text-right">{i + 1}</span>
-                    <span className="text-xl font-black text-amber-400 w-10">{e.ticket}</span>
+                    <span className="text-xl font-black text-amber-400 w-10">{i + 1}º</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-zinc-200 font-medium truncate">{e.name}</p>
                       {e.services.length > 0 && (
@@ -307,10 +314,14 @@ export default function AdminPage() {
                         </p>
                       )}
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-amber-400 font-medium">{formatMinutes(calcMinutes(e.services))}</p>
-                      {i > 0 && waitMin > 0 && (
-                        <p className="text-xs text-zinc-600">espera {formatMinutes(waitMin)}</p>
+                    <div className="text-right shrink-0 space-y-1">
+                      {i === 0 && (
+                        <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                          em breve
+                        </span>
+                      )}
+                      {totalWait > 0 && (
+                        <p className="text-xs text-amber-400 font-medium">espera {formatMinutes(totalWait)}</p>
                       )}
                     </div>
                   </div>
