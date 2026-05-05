@@ -1,0 +1,7 @@
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { initDB } = await import('./lib/db')
+    await initDB()
+    console.log('[db] Config rows ready')
+  }
+}

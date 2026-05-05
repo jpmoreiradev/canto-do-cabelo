@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model QueueEntry {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String      @db.VarChar(100)
+  ticket    Int
+  status    EntryStatus @default(waiting)
+  services  String[]    @default([])
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  calledAt  DateTime?   @map("called_at") @db.Timestamptz
+
+  @@map("queue_entries")
+}
+
+model QueueConfig {
+  key   String  @id @db.VarChar(50)
+  value String?
+
+  @@map("queue_config")
+}
+
+enum EntryStatus {
+  waiting
+  called
+  served
+}
