@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { formatMinutes } from '@/lib/services'
 
 interface Entry {
   id: string
@@ -11,6 +12,7 @@ interface Entry {
   createdAt: string
   calledAt?: string
   position: number
+  waitMinutes: number
 }
 
 function AcompanharContent() {
@@ -97,6 +99,16 @@ function AcompanharContent() {
           {isServed && <p className="font-semibold">Atendimento concluído</p>}
           {isWaiting && <p className="text-zinc-400 text-sm">aguardando na fila</p>}
         </div>
+
+        {/* Tempo de espera estimado */}
+        {isWaiting && (
+          <div className="mt-3 rounded-xl bg-zinc-800 border border-zinc-700 p-4">
+            <p className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Espera estimada</p>
+            <p className="text-2xl font-black text-amber-400">
+              {entry.position === 1 ? 'em breve' : formatMinutes(entry.waitMinutes)}
+            </p>
+          </div>
+        )}
 
         {!isServed && (
           <p className="text-xs text-zinc-600 mt-4">Atualiza automaticamente a cada 30 segundos</p>

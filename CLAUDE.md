@@ -1,5 +1,9 @@
 # Canto do Cabelo — Sistema de Fila de Espera
 
+## Regras para o Claude
+
+- Sempre que fizer uma alteração relevante (nova rota, novo comportamento, mudança de schema, decisão técnica), atualizar o CLAUDE.md para refletir o estado atual do projeto.
+
 Sistema de ordem de chegada para barbearia/salão. Clientes acompanham sua posição pelo celular, a TV exibe a fila em tempo real, e o atendente gerencia tudo por um painel protegido por senha.
 
 ## Stack
