@@ -13,10 +13,27 @@ function EntrarForm() {
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [queueWaitMinutes, setQueueWaitMinutes] = useState(0)
+  const [durations, setDurations] = useState<Record<string, number>>({})
 
   useEffect(() => {
     if (!token) setError('Escaneie o QR code na TV para entrar na fila.')
   }, [token])
+
+  useEffect(() => {
+    async function fetchQueue() {
+      const res = await fetch('/api/queue')
+      if (!res.ok) return
+      const data = await res.json()
+      const d: Record<string, number> = data.serviceDurations ?? {}
+      setDurations(d)
+      const total = data.entries
+        .filter((e: { status: string; services: string[] }) => e.status === 'waiting' || e.status === 'called')
+        .reduce((sum: number, e: { services: string[] }) => sum + calcMinutes(e.services, d), 0)
+      setQueueWaitMinutes(total)
+    }
+    fetchQueue()
+  }, [])
 
   function toggleService(id: string) {
     setSelectedServices((prev) =>
@@ -46,7 +63,7 @@ function EntrarForm() {
     }
   }
 
-  const estimatedMinutes = calcMinutes(selectedServices)
+  const estimatedMinutes = calcMinutes(selectedServices, durations)
   const disabled = !token || loading
 
   return (
@@ -112,13 +129,21 @@ function EntrarForm() {
               </div>
             </div>
 
-            {/* Time estimate */}
-            {estimatedMinutes > 0 && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-center">
-                <span className="text-zinc-500 text-xs">Tempo estimado do seu serviço </span>
-                <span className="font-bold text-amber-400">{formatMinutes(estimatedMinutes)}</span>
+            {/* Time estimates */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 space-y-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 text-xs">Espera na fila</span>
+                <span className="font-bold text-amber-400">
+                  {queueWaitMinutes === 0 ? 'em breve' : formatMinutes(queueWaitMinutes)}
+                </span>
               </div>
-            )}
+              {estimatedMinutes > 0 && (
+                <div className="flex justify-between items-center border-t border-zinc-800 pt-1.5">
+                  <span className="text-zinc-500 text-xs">Seu serviço</span>
+                  <span className="text-zinc-400 text-sm">{formatMinutes(estimatedMinutes)}</span>
+                </div>
+              )}
+            </div>
 
             {error && (
               <p className="text-red-400 text-sm text-center">{error}</p>

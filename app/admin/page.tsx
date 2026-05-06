@@ -9,6 +9,7 @@ interface QueueStateDB {
   entries: QueueEntry[]
   currentTicket: number
   lastCalledId: string | null
+  serviceDurations: Record<string, number>
 }
 
 interface LastAdded extends QueueEntry {
@@ -24,6 +25,8 @@ export default function AdminPage() {
   const [addLoading, setAddLoading] = useState(false)
   const [addError, setAddError] = useState('')
   const [lastAdded, setLastAdded] = useState<LastAdded | null>(null)
+  const [entryLink, setEntryLink] = useState('')
+  const [entryLinkCopied, setEntryLinkCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function fetchState() {
@@ -95,12 +98,29 @@ export default function AdminPage() {
     fetchState()
   }
 
+  async function generateEntryLink() {
+    const res = await fetch('/api/queue/tv-token')
+    if (res.ok) {
+      const { token } = await res.json()
+      const link = `${window.location.origin}/entrar?t=${token}`
+      setEntryLink(link)
+      setEntryLinkCopied(false)
+    }
+  }
+
+  async function copyEntryLink() {
+    await navigator.clipboard.writeText(entryLink)
+    setEntryLinkCopied(true)
+    setTimeout(() => setEntryLinkCopied(false), 3000)
+  }
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     window.location.href = '/admin/login'
   }
 
-  const estimatedMinutes = calcMinutes(selectedServices)
+  const durations = state?.serviceDurations
+  const estimatedMinutes = calcMinutes(selectedServices, durations)
 
   if (!state) {
     return (
@@ -139,6 +159,12 @@ export default function AdminPage() {
             >
               TV
             </a>
+            <a
+              href="/admin/config"
+              className="text-sm text-zinc-400 border border-zinc-700 px-3 py-1.5 rounded-lg hover:border-zinc-500 transition-colors"
+            >
+              Config
+            </a>
             <button
               onClick={logout}
               className="text-sm text-zinc-500 border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-zinc-600 transition-colors"
@@ -153,6 +179,41 @@ export default function AdminPage() {
           <Stat label="Aguardando" value={waiting.length} color="amber" />
           <Stat label="Atendidos" value={served.length} color="green" />
           <Stat label="Total hoje" value={state.currentTicket} color="zinc" />
+        </div>
+
+        {/* Entry link generator */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+          <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4">
+            Link de entrada (WhatsApp)
+          </h2>
+          {entryLink ? (
+            <div className="space-y-3">
+              <code className="text-xs text-zinc-400 bg-zinc-800 rounded-lg px-3 py-2 block truncate">
+                {entryLink}
+              </code>
+              <div className="flex gap-2">
+                <button
+                  onClick={copyEntryLink}
+                  className="flex-1 text-sm font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 px-4 py-2.5 rounded-xl transition-colors"
+                >
+                  {entryLinkCopied ? 'Copiado!' : 'Copiar link'}
+                </button>
+                <button
+                  onClick={generateEntryLink}
+                  className="text-sm text-zinc-400 border border-zinc-700 px-4 py-2.5 rounded-xl hover:border-zinc-500 transition-colors"
+                >
+                  Renovar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={generateEntryLink}
+              className="w-full text-sm font-bold text-zinc-300 border border-zinc-700 hover:border-amber-500 hover:text-amber-400 px-4 py-3 rounded-xl transition-colors"
+            >
+              Gerar link
+            </button>
+          )}
         </div>
 
         {/* Add patient form */}
@@ -308,7 +369,7 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-1">
               {waiting.map((e, i) => {
-                const waitBefore = waiting.slice(0, i).reduce((s, w) => s + (calcMinutes(w.services) || 30), 0)
+                const waitBefore = waiting.slice(0, i).reduce((s, w) => s + calcMinutes(w.services, durations), 0)
                 return (
                   <div key={e.id} className="flex items-center gap-3 py-2.5 border-b border-zinc-800 last:border-0">
                     <span className="text-xl font-black text-amber-400 w-10 shrink-0">{i + 1}º</span>

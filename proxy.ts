@@ -4,14 +4,14 @@ import { jwtVerify } from 'jose'
 const secret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
 
 const ADMIN_PAGES = ['/admin', '/tv']
-const ADMIN_API = ['/api/queue/next', '/api/queue/served', '/api/queue/remove']
+const ADMIN_API = ['/api/queue/next', '/api/queue/served', '/api/queue/remove', '/api/config/services']
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const isAdminPage = ADMIN_PAGES.some((p) => pathname.startsWith(p)) && pathname !== '/admin/login'
   const isAdminApi =
-    ADMIN_API.some((p) => pathname.startsWith(p)) ||
+    (ADMIN_API.some((p) => pathname.startsWith(p)) && req.method === 'POST') ||
     (pathname === '/api/queue' && req.method === 'POST')
 
   if (!isAdminPage && !isAdminApi) return NextResponse.next()
@@ -33,5 +33,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/tv', '/api/queue/:path*', '/api/queue'],
+  matcher: ['/admin/:path*', '/tv', '/api/queue/:path*', '/api/queue', '/api/config/:path*'],
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/db'
+import prisma, { getServiceDurations } from '@/lib/db'
 import { calcMinutes } from '@/lib/services'
 
 export async function GET(req: NextRequest) {
@@ -13,17 +13,19 @@ export async function GET(req: NextRequest) {
     where: { status: 'waiting', ticket: { lt: entry.ticket } },
   })
 
-  // soma os serviços de quem está na frente (waiting com ticket menor) + quem está em called
-  const ahead = await prisma.queueEntry.findMany({
-    where: {
-      OR: [
-        { status: 'waiting', ticket: { lt: entry.ticket } },
-        { status: 'called' },
-      ],
-    },
-    select: { services: true },
-  })
-  const waitMinutes = ahead.reduce((sum, e) => sum + calcMinutes(e.services), 0)
+  const [ahead, durations] = await Promise.all([
+    prisma.queueEntry.findMany({
+      where: {
+        OR: [
+          { status: 'waiting', ticket: { lt: entry.ticket } },
+          { status: 'called' },
+        ],
+      },
+      select: { services: true },
+    }),
+    getServiceDurations(),
+  ])
+  const waitMinutes = ahead.reduce((sum, e) => sum + calcMinutes(e.services, durations), 0)
 
   return NextResponse.json({
     ...entry,

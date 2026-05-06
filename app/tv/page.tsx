@@ -9,6 +9,7 @@ interface QueueStateDB {
   entries: QueueEntry[]
   currentTicket: number
   lastCalledId: string | null
+  serviceDurations: Record<string, number>
 }
 
 export default function TVPage() {
@@ -109,9 +110,11 @@ export default function TVPage() {
               <p className="text-zinc-700 text-center py-8">Fila vazia</p>
             )}
             {waiting.map((e, i) => {
-              const waitBefore = waiting
+              const d = state.serviceDurations
+              const calledMinutes = calcMinutes(called?.services ?? [], d)
+              const waitBefore = calledMinutes + waiting
                 .slice(0, i)
-                .reduce((s, w) => s + (calcMinutes(w.services) || 30), 0)
+                .reduce((s, w) => s + calcMinutes(w.services, d), 0)
 
               return (
                 <div
@@ -120,15 +123,15 @@ export default function TVPage() {
                 >
                   <span className="text-2xl font-black text-amber-400 w-12 shrink-0">{i + 1}º</span>
                   <span className="text-zinc-200 font-medium flex-1 truncate">{e.name}</span>
-                  {i === 0 ? (
+                  {waitBefore === 0 ? (
                     <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">
                       em breve
                     </span>
-                  ) : waitBefore > 0 ? (
+                  ) : (
                     <span className="text-xs text-zinc-500 shrink-0 text-right">
                       espera {formatMinutes(waitBefore)}
                     </span>
-                  ) : null}
+                  )}
                 </div>
               )
             })}

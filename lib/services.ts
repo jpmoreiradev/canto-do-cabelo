@@ -8,14 +8,17 @@ export const SERVICES = [
 
 export type ServiceId = (typeof SERVICES)[number]['id']
 
-export function calcMinutes(serviceIds: string[]): number {
-  return SERVICES.filter((s) => serviceIds.includes(s.id)).reduce((sum, s) => sum + s.minutes, 0)
+export function calcMinutes(serviceIds: string[], durations?: Record<string, number>): number {
+  return SERVICES.filter((s) => serviceIds.includes(s.id)).reduce(
+    (sum, s) => sum + (durations?.[s.id] ?? s.minutes),
+    0,
+  )
 }
 
 export function formatMinutes(minutes: number): string {
   if (minutes === 0) return '—'
-  if (minutes < 60) return `~${minutes} min`
+  if (minutes < 60) return `aprox. ${minutes} min`
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  return m > 0 ? `~${h}h ${m}min` : `~${h}h`
+  return m > 0 ? `aprox. ${h}h ${m}min` : `aprox. ${h}h`
 }

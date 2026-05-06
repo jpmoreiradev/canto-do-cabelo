@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { SERVICES } from '@/lib/services'
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
@@ -20,4 +21,20 @@ export async function initDB() {
     update: {},
     create: { key: 'last_called_id', value: null },
   })
+  for (const s of SERVICES) {
+    await prisma.queueConfig.upsert({
+      where: { key: `svc_${s.id}` },
+      update: {},
+      create: { key: `svc_${s.id}`, value: String(s.minutes) },
+    })
+  }
+}
+
+export async function getServiceDurations(): Promise<Record<string, number>> {
+  const rows = await prisma.queueConfig.findMany({
+    where: { key: { startsWith: 'svc_' } },
+  })
+  return Object.fromEntries(
+    rows.map((r) => [r.key.replace('svc_', ''), parseInt(r.value ?? '0')]),
+  )
 }

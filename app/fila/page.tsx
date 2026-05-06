@@ -7,6 +7,7 @@ import { calcMinutes, formatMinutes } from '@/lib/services'
 interface QueueStateDB {
   entries: QueueEntry[]
   lastCalledId: string | null
+  serviceDurations: Record<string, number>
 }
 
 export default function FilaPage() {
@@ -67,9 +68,11 @@ export default function FilaPage() {
           ) : (
             <div>
               {waiting.map((e, i) => {
-                const waitBefore = waiting
+                const d = state.serviceDurations
+                const calledMinutes = calcMinutes(called?.services ?? [], d)
+                const waitBefore = calledMinutes + waiting
                   .slice(0, i)
-                  .reduce((s, w) => s + (calcMinutes(w.services) || 30), 0)
+                  .reduce((s, w) => s + calcMinutes(w.services, d), 0)
 
                 return (
                   <div
@@ -84,15 +87,15 @@ export default function FilaPage() {
 
                     <span className="text-zinc-100 font-medium flex-1 truncate">{e.name}</span>
 
-                    {i === 0 ? (
+                    {waitBefore === 0 ? (
                       <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">
                         em breve
                       </span>
-                    ) : waitBefore > 0 ? (
+                    ) : (
                       <span className="text-zinc-500 text-sm shrink-0">
                         espera {formatMinutes(waitBefore)}
                       </span>
-                    ) : null}
+                    )}
                   </div>
                 )
               })}

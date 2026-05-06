@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/db'
+import prisma, { getServiceDurations } from '@/lib/db'
 
 export async function GET() {
-  const [entries, config] = await Promise.all([
+  const [entries, config, serviceDurations] = await Promise.all([
     prisma.queueEntry.findMany({ orderBy: { ticket: 'asc' } }),
     prisma.queueConfig.findMany(),
+    getServiceDurations(),
   ])
 
   const configMap = Object.fromEntries(config.map((c) => [c.key, c.value]))
@@ -17,6 +18,7 @@ export async function GET() {
     })),
     currentTicket: parseInt(configMap.current_ticket ?? '0'),
     lastCalledId: configMap.last_called_id ?? null,
+    serviceDurations,
   })
 }
 
