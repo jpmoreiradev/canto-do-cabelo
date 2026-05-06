@@ -122,7 +122,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-zinc-100">Painel do Atendente</h1>
-            <p className="text-zinc-500 text-sm">✂️ Canto do Cabelo</p>
+            <p className="text-zinc-500 text-sm">Canto do Cabelo</p>
           </div>
           <div className="flex gap-2">
             <a
@@ -212,7 +212,7 @@ export default function AdminPage() {
               </div>
               <button
                 type="submit"
-                disabled={!newName.trim() || addLoading}
+                disabled={!newName.trim() || selectedServices.length === 0 || addLoading}
                 className="bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap"
               >
                 {addLoading ? '...' : '+ Adicionar'}
@@ -308,7 +308,7 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-1">
               {waiting.map((e, i) => {
-                const waitBefore = waiting.slice(0, i).reduce((s, w) => s + calcMinutes(w.services), 0)
+                const waitBefore = waiting.slice(0, i).reduce((s, w) => s + (calcMinutes(w.services) || 30), 0)
                 return (
                   <div key={e.id} className="flex items-center gap-3 py-2.5 border-b border-zinc-800 last:border-0">
                     <span className="text-xl font-black text-amber-400 w-10 shrink-0">{i + 1}º</span>

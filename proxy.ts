@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose'
 
 const secret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
 
-const ADMIN_PAGES = ['/admin']
+const ADMIN_PAGES = ['/admin', '/tv']
 const ADMIN_API = ['/api/queue/next', '/api/queue/served', '/api/queue/remove']
 
 export async function proxy(req: NextRequest) {
@@ -33,5 +33,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/queue/:path*', '/api/queue'],
+  matcher: ['/admin/:path*', '/tv', '/api/queue/:path*', '/api/queue'],
 }

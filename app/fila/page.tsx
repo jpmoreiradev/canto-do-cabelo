@@ -38,7 +38,7 @@ export default function FilaPage() {
       <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
         {/* Header */}
         <div className="text-center">
-          <span className="text-4xl">✂️</span>
+          <img src="/image.png" alt="Canto do Cabelo" className="h-16 w-auto rounded-xl mx-auto" />
           <h1 className="text-2xl font-black text-zinc-100 mt-2">Canto do Cabelo</h1>
           <p className="text-zinc-500 text-sm mt-1">Fila de espera</p>
         </div>
@@ -69,7 +69,7 @@ export default function FilaPage() {
               {waiting.map((e, i) => {
                 const waitBefore = waiting
                   .slice(0, i)
-                  .reduce((s, w) => s + calcMinutes(w.services), 0)
+                  .reduce((s, w) => s + (calcMinutes(w.services) || 30), 0)
 
                 return (
                   <div

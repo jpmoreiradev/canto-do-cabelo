@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import type { QueueEntry } from '@/lib/types'
 import { calcMinutes, formatMinutes } from '@/lib/services'
 
@@ -13,6 +14,8 @@ interface QueueStateDB {
 export default function TVPage() {
   const [state, setState] = useState<QueueStateDB | null>(null)
   const [time, setTime] = useState('')
+  const [tvToken, setTvToken] = useState('')
+  const [qrUrl, setQrUrl] = useState('')
 
   useEffect(() => {
     const tick = () =>
@@ -32,6 +35,22 @@ export default function TVPage() {
     return () => clearInterval(id)
   }, [])
 
+  useEffect(() => {
+    async function refreshToken() {
+      const res = await fetch('/api/queue/tv-token')
+      if (res.ok) {
+        const { token } = await res.json()
+        setTvToken(token)
+        const base = window.location.origin
+        setQrUrl(`${base}/entrar?t=${token}`)
+      }
+    }
+    refreshToken()
+    // Renew every 4 minutes so the 5-minute token never expires while displayed
+    const id = setInterval(refreshToken, 4 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
   if (!state) {
     return (
       <main className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -48,7 +67,7 @@ export default function TVPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-800 pb-5">
         <div className="flex items-center gap-3">
-          <span className="text-4xl">✂️</span>
+          <img src="/image.png" alt="Canto do Cabelo" className="h-14 w-auto rounded-lg" />
           <div>
             <h1 className="text-3xl font-black tracking-tight text-zinc-100">Canto do Cabelo</h1>
             <p className="text-zinc-500 text-sm">Ordem de atendimento</p>
@@ -79,7 +98,7 @@ export default function TVPage() {
           )}
         </div>
 
-        {/* Queue sidebar */}
+        {/* Right column: queue + QR code */}
         <div className="w-80 flex flex-col gap-4">
           <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-semibold">
             Na fila ({waiting.length})
@@ -92,7 +111,7 @@ export default function TVPage() {
             {waiting.map((e, i) => {
               const waitBefore = waiting
                 .slice(0, i)
-                .reduce((s, w) => s + calcMinutes(w.services), 0)
+                .reduce((s, w) => s + (calcMinutes(w.services) || 30), 0)
 
               return (
                 <div
@@ -115,6 +134,20 @@ export default function TVPage() {
             })}
           </div>
 
+          {/* QR code panel */}
+          {qrUrl && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col items-center gap-3 shrink-0">
+              <p className="text-zinc-500 uppercase tracking-widest text-xs font-semibold">
+                Entre na fila pelo celular
+              </p>
+              <div className="bg-white p-3 rounded-xl">
+                <QRCodeSVG value={qrUrl} size={160} />
+              </div>
+              <p className="text-zinc-600 text-xs text-center">
+                Escaneie a câmera do celular
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </main>

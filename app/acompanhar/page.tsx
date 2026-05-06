@@ -60,7 +60,7 @@ function AcompanharContent() {
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-8 text-center">
         <div className="mb-6">
-          <span className="text-4xl">✂️</span>
+          <img src="/image.png" alt="Canto do Cabelo" className="h-16 w-auto rounded-xl mx-auto" />
           <h1 className="text-lg font-black text-zinc-300 mt-2">Canto do Cabelo</h1>
         </div>
 
