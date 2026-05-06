@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose'
 const secret = () => new TextEncoder().encode(process.env.JWT_SECRET!)
 
 const ADMIN_PAGES = ['/admin']
-const ADMIN_API = ['/api/queue/next', '/api/queue/served']
+const ADMIN_API = ['/api/queue/next', '/api/queue/served', '/api/queue/remove']
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl

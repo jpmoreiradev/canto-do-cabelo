@@ -14,7 +14,7 @@ model QueueEntry {
   status    EntryStatus @default(waiting)
   services  String[]    @default([])
   createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  calledAt  DateTime?   @map("called_at") @db.Timestamptz
+  calledAt    DateTime?   @map("called_at") @db.Timestamptz
 
   @@map("queue_entries")
 }

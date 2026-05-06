@@ -10,6 +10,11 @@ export async function POST() {
 
     if (!next) return null
 
+    await tx.queueEntry.updateMany({
+      where: { status: 'called' },
+      data: { status: 'served' },
+    })
+
     const updated = await tx.queueEntry.update({
       where: { id: next.id },
       data: { status: 'called', calledAt: new Date() },

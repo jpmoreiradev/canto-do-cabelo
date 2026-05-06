@@ -18,7 +18,7 @@ export default function FilaPage() {
       if (res.ok) setState(await res.json())
     }
     fetch_()
-    const id = setInterval(fetch_, 3000)
+    const id = setInterval(fetch_, 5000)
     return () => clearInterval(id)
   }, [])
 
@@ -43,19 +43,13 @@ export default function FilaPage() {
           <p className="text-zinc-500 text-sm mt-1">Fila de espera</p>
         </div>
 
-        {/* Chamando agora */}
+        {/* Em atendimento */}
         {called && (
-          <div className="bg-amber-500/10 border-2 border-amber-500 rounded-2xl p-5 text-center animate-pulse-slow">
-            <p className="text-amber-400/70 text-xs uppercase tracking-widest mb-1">
-              Chamando agora
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center">
+            <p className="text-zinc-500 text-xs uppercase tracking-widest mb-1">
+              Em atendimento
             </p>
-            <p className="text-6xl font-black text-amber-400 leading-none">1º</p>
             <p className="text-xl font-bold text-zinc-100 mt-2">{called.name}</p>
-            {calcMinutes(called.services) > 0 && (
-              <p className="text-zinc-500 text-sm mt-1">
-                {formatMinutes(calcMinutes(called.services))}
-              </p>
-            )}
           </div>
         )}
 
@@ -76,34 +70,29 @@ export default function FilaPage() {
                 const waitBefore = waiting
                   .slice(0, i)
                   .reduce((s, w) => s + calcMinutes(w.services), 0)
-                const totalWait = waitBefore + calcMinutes(e.services)
 
                 return (
                   <div
                     key={e.id}
                     className="flex items-center gap-4 px-5 py-4 border-b border-zinc-800/60 last:border-0"
                   >
-                    {/* Posição */}
                     <div className="flex flex-col items-center w-10 shrink-0">
                       <span className="text-2xl font-black text-amber-400 leading-none">
                         {i + 1}º
                       </span>
                     </div>
 
-                    {/* Nome */}
                     <span className="text-zinc-100 font-medium flex-1 truncate">{e.name}</span>
-                    {i === 0 && (
+
+                    {i === 0 ? (
                       <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">
                         em breve
                       </span>
-                    )}
-
-                    {/* Tempo estimado */}
-                    {totalWait > 0 && (
+                    ) : waitBefore > 0 ? (
                       <span className="text-zinc-500 text-sm shrink-0">
-                        espera {formatMinutes(totalWait)}
+                        espera {formatMinutes(waitBefore)}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 )
               })}

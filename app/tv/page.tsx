@@ -28,7 +28,7 @@ export default function TVPage() {
       if (res.ok) setState(await res.json())
     }
     fetchState()
-    const id = setInterval(fetchState, 3000)
+    const id = setInterval(fetchState, 5000)
     return () => clearInterval(id)
   }, [])
 
@@ -58,28 +58,23 @@ export default function TVPage() {
       </div>
 
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Currently called */}
+        {/* Currently being attended */}
         <div className="flex-1 flex flex-col gap-4">
           <h2 className="text-zinc-500 uppercase tracking-widest text-sm font-semibold">
-            Chamando agora
+            Em atendimento
           </h2>
 
           {called ? (
-            <div className="flex-1 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center gap-4 animate-pulse-slow p-8 shadow-2xl shadow-amber-500/20">
-              <p className="text-amber-200/70 uppercase tracking-widest text-xl font-semibold">
-                Posição na fila
+            <div className="flex-1 rounded-3xl bg-zinc-900 border border-zinc-800 flex flex-col items-center justify-center gap-4 p-8">
+              <p className="text-zinc-500 uppercase tracking-widest text-xl font-semibold">
+                Sendo atendido agora
               </p>
-              <p className="text-[10rem] font-black text-white leading-none drop-shadow-lg">
-                1º
-              </p>
-              <p className="text-4xl font-bold text-amber-100">{called.name}</p>
-              <div className="mt-4 px-8 py-3 bg-black/20 rounded-full">
-                <p className="text-white font-semibold text-xl">Dirija-se ao atendimento</p>
-              </div>
+              <p className="text-8xl font-black text-amber-400 leading-none">{called.ticket}</p>
+              <p className="text-4xl font-bold text-zinc-100">{called.name}</p>
             </div>
           ) : (
             <div className="flex-1 rounded-3xl border-2 border-dashed border-zinc-800 flex items-center justify-center">
-              <p className="text-zinc-700 text-2xl">Aguardando chamada</p>
+              <p className="text-zinc-700 text-2xl">Nenhum atendimento em curso</p>
             </div>
           )}
         </div>
@@ -95,11 +90,9 @@ export default function TVPage() {
               <p className="text-zinc-700 text-center py-8">Fila vazia</p>
             )}
             {waiting.map((e, i) => {
-              // Cumulative wait = sum of durations of everyone before this person
               const waitBefore = waiting
                 .slice(0, i)
                 .reduce((s, w) => s + calcMinutes(w.services), 0)
-              const totalWait = waitBefore + calcMinutes(e.services)
 
               return (
                 <div
@@ -108,16 +101,15 @@ export default function TVPage() {
                 >
                   <span className="text-2xl font-black text-amber-400 w-12 shrink-0">{i + 1}º</span>
                   <span className="text-zinc-200 font-medium flex-1 truncate">{e.name}</span>
-                  {i === 0 && (
+                  {i === 0 ? (
                     <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">
                       em breve
                     </span>
-                  )}
-                  {totalWait > 0 && (
+                  ) : waitBefore > 0 ? (
                     <span className="text-xs text-zinc-500 shrink-0 text-right">
-                      {formatMinutes(totalWait)}
+                      espera {formatMinutes(waitBefore)}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               )
             })}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import type { QueueEntry } from '@/lib/types'
 import { SERVICES, calcMinutes, formatMinutes } from '@/lib/services'
 
@@ -17,6 +18,7 @@ interface LastAdded extends QueueEntry {
 export default function AdminPage() {
   const [state, setState] = useState<QueueStateDB | null>(null)
   const [callLoading, setCallLoading] = useState(false)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [addLoading, setAddLoading] = useState(false)
@@ -31,7 +33,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchState()
-    const id = setInterval(fetchState, 3000)
+    const id = setInterval(fetchState, 5000)
     return () => clearInterval(id)
   }, [])
 
@@ -83,6 +85,16 @@ export default function AdminPage() {
     fetchState()
   }
 
+  async function removeFromQueue(id: string) {
+    await fetch('/api/queue/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    setConfirmRemoveId(null)
+    fetchState()
+  }
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     window.location.href = '/admin/login'
@@ -101,6 +113,7 @@ export default function AdminPage() {
   const called = state.entries.find((e) => e.id === state.lastCalledId)
   const waiting = state.entries.filter((e) => e.status === 'waiting')
   const served = state.entries.filter((e) => e.status === 'served')
+  const lastAddedPosition = lastAdded ? waiting.findIndex((e) => e.id === lastAdded.id) + 1 : null
 
   return (
     <main className="min-h-screen bg-zinc-950 p-6">
@@ -212,32 +225,26 @@ export default function AdminPage() {
           {/* Last added — tracking link */}
           {lastAdded && (
             <div className="mt-4 bg-zinc-800 border border-zinc-700 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-amber-400 font-bold">
-                  Nº {lastAdded.ticket} — {lastAdded.name}
-                </p>
-                <span className="text-xs text-zinc-500">
-                  {formatMinutes(calcMinutes(lastAdded.services))}
-                </span>
-              </div>
-              {lastAdded.services.length > 0 && (
-                <p className="text-zinc-500 text-xs mb-3">
-                  {lastAdded.services
-                    .map((id) => SERVICES.find((s) => s.id === id)?.label)
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              )}
-              <div className="flex gap-2 items-center">
-                <code className="text-xs text-zinc-400 bg-zinc-900 rounded-lg px-3 py-2 flex-1 truncate">
-                  {lastAdded.trackingUrl}
-                </code>
-                <button
-                  onClick={() => navigator.clipboard.writeText(lastAdded.trackingUrl)}
-                  className="text-xs text-zinc-300 bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg transition-colors whitespace-nowrap"
-                >
-                  Copiar
-                </button>
+              {lastAddedPosition ? (
+                <div className="text-center mb-4">
+                  <p className="text-amber-400 font-black" style={{ fontSize: 32 }}>{lastAdded.name} adicionado na {lastAddedPosition}ª posição</p>
+                </div>
+              ) : null}
+              <div className="flex gap-4 items-center">
+                <div className="bg-white p-2 rounded-lg shrink-0">
+                  <QRCodeSVG value={lastAdded.trackingUrl} size={96} />
+                </div>
+                <div className="flex flex-col gap-2 flex-1 min-w-0">
+                  <code className="text-xs text-zinc-400 bg-zinc-900 rounded-lg px-3 py-2 truncate block">
+                    {lastAdded.trackingUrl}
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(lastAdded.trackingUrl)}
+                    className="text-xs text-zinc-300 bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg transition-colors"
+                  >
+                    Copiar link
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -249,9 +256,8 @@ export default function AdminPage() {
             Em atendimento
           </h2>
           {called ? (
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div className="flex items-center gap-4">
-                <span className="text-4xl font-black text-amber-400">{called.ticket}</span>
                 <div>
                   <p className="font-bold text-zinc-100 text-lg">{called.name}</p>
                   {called.services.length > 0 && (
@@ -265,12 +271,14 @@ export default function AdminPage() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => markServed(called.id)}
-                className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition-colors"
-              >
-                Concluir
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => markServed(called.id)}
+                  className="bg-green-600 hover:bg-green-500 text-white font-bold px-5 py-2.5 rounded-xl transition-colors"
+                >
+                  Finalizar
+                </button>
+              </div>
             </div>
           ) : (
             <p className="text-zinc-600 text-center py-3">Nenhum cliente em atendimento</p>
@@ -301,10 +309,9 @@ export default function AdminPage() {
             <div className="space-y-1">
               {waiting.map((e, i) => {
                 const waitBefore = waiting.slice(0, i).reduce((s, w) => s + calcMinutes(w.services), 0)
-                const totalWait = waitBefore + calcMinutes(e.services)
                 return (
                   <div key={e.id} className="flex items-center gap-3 py-2.5 border-b border-zinc-800 last:border-0">
-                    <span className="text-xl font-black text-amber-400 w-10">{i + 1}º</span>
+                    <span className="text-xl font-black text-amber-400 w-10 shrink-0">{i + 1}º</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-zinc-200 font-medium truncate">{e.name}</p>
                       {e.services.length > 0 && (
@@ -314,16 +321,38 @@ export default function AdminPage() {
                         </p>
                       )}
                     </div>
-                    <div className="text-right shrink-0 space-y-1">
-                      {i === 0 && (
+                    <div className="shrink-0 flex items-center gap-2">
+                      {i === 0 ? (
                         <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
                           em breve
                         </span>
-                      )}
-                      {totalWait > 0 && (
-                        <p className="text-xs text-amber-400 font-medium">espera {formatMinutes(totalWait)}</p>
-                      )}
+                      ) : waitBefore > 0 ? (
+                        <p className="text-xs text-amber-400 font-medium">espera {formatMinutes(waitBefore)}</p>
+                      ) : null}
                     </div>
+                    {confirmRemoveId === e.id ? (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => removeFromQueue(e.id)}
+                          className="text-xs text-red-500 hover:text-red-400 border border-red-500/50 px-2 py-0.5 rounded-full transition-colors"
+                        >
+                          confirmar
+                        </button>
+                        <button
+                          onClick={() => setConfirmRemoveId(null)}
+                          className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                        >
+                          cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmRemoveId(e.id)}
+                        className="shrink-0 text-xs text-red-500 hover:text-red-400 border border-red-500/30 hover:border-red-400 px-2 py-0.5 rounded-full transition-colors"
+                      >
+                        remover
+                      </button>
+                    )}
                   </div>
                 )
               })}

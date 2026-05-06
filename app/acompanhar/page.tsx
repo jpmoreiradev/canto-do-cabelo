@@ -29,7 +29,7 @@ function AcompanharContent() {
     }
 
     fetch_()
-    const interval = setInterval(fetch_, 3000)
+    const interval = setInterval(fetch_, 30000)
     return () => clearInterval(interval)
   }, [id])
 
@@ -78,7 +78,7 @@ function AcompanharContent() {
           <p
             className={`text-7xl font-black leading-none mb-2 ${isCalled ? 'text-amber-400' : 'text-zinc-100'}`}
           >
-            {entry.ticket}
+            {isWaiting ? `${entry.position}º` : isCalled ? '1º' : '—'}
           </p>
           <p className="text-zinc-300 font-semibold">{entry.name}</p>
         </div>
@@ -95,16 +95,11 @@ function AcompanharContent() {
         >
           {isCalled && <p className="text-2xl font-black">🎉 É a sua vez!</p>}
           {isServed && <p className="font-semibold">Atendimento concluído</p>}
-          {isWaiting && (
-            <>
-              <p className="text-4xl font-black text-amber-400">{entry.position}°</p>
-              <p className="text-zinc-400 text-sm mt-1">na fila de espera</p>
-            </>
-          )}
+          {isWaiting && <p className="text-zinc-400 text-sm">aguardando na fila</p>}
         </div>
 
         {!isServed && (
-          <p className="text-xs text-zinc-600 mt-4">Atualiza automaticamente a cada 3 segundos</p>
+          <p className="text-xs text-zinc-600 mt-4">Atualiza automaticamente a cada 30 segundos</p>
         )}
 
         {isServed && (
