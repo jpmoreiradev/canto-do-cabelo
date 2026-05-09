@@ -26,6 +26,16 @@ model QueueConfig {
   @@map("queue_config")
 }
 
+model Service {
+  id      String @id @db.VarChar(50)
+  label   String @db.VarChar(100)
+  emoji   String @db.VarChar(10)
+  minutes Int
+  ord     Int    @default(0)
+
+  @@map("services")
+}
+
 enum EntryStatus {
   waiting
   called

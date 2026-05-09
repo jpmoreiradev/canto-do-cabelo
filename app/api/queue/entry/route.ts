@@ -27,11 +27,13 @@ export async function GET(req: NextRequest) {
   ])
   const waitMinutes = ahead.reduce((sum, e) => sum + calcMinutes(e.services, durations), 0)
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     ...entry,
     createdAt: entry.createdAt.toISOString(),
     calledAt: entry.calledAt?.toISOString() ?? null,
     position: position + 1,
     waitMinutes,
   })
+  response.headers.set('Cache-Control', 'public, s-maxage=25, stale-while-revalidate=60')
+  return response
 }

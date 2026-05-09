@@ -19,7 +19,7 @@ export default function FilaPage() {
       if (res.ok) setState(await res.json())
     }
     fetch_()
-    const id = setInterval(fetch_, 5000)
+    const id = setInterval(fetch_, 10000)
     return () => clearInterval(id)
   }, [])
 
@@ -104,7 +104,7 @@ export default function FilaPage() {
         </div>
 
         <p className="text-center text-xs text-zinc-700">
-          Atualiza automaticamente a cada 3 segundos
+          Atualiza automaticamente a cada 10 segundos
         </p>
       </div>
     </main>

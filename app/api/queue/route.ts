@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma, { getServiceDurations } from '@/lib/db'
+import prisma, { getServices } from '@/lib/db'
 
 export async function GET() {
-  const [entries, config, serviceDurations] = await Promise.all([
+  const [entries, config, services] = await Promise.all([
     prisma.queueEntry.findMany({ orderBy: { ticket: 'asc' } }),
     prisma.queueConfig.findMany(),
-    getServiceDurations(),
+    getServices(),
   ])
 
   const configMap = Object.fromEntries(config.map((c) => [c.key, c.value]))
+  const serviceDurations = Object.fromEntries(services.map((s) => [s.id, s.minutes]))
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     entries: entries.map((e) => ({
       ...e,
       createdAt: e.createdAt.toISOString(),
@@ -19,7 +20,10 @@ export async function GET() {
     currentTicket: parseInt(configMap.current_ticket ?? '0'),
     lastCalledId: configMap.last_called_id ?? null,
     serviceDurations,
+    services,
   })
+  response.headers.set('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=20')
+  return response
 }
 
 // Admin only — protected by middleware

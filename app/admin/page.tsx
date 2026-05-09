@@ -3,13 +3,15 @@
 import { useEffect, useState, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import type { QueueEntry } from '@/lib/types'
-import { SERVICES, calcMinutes, formatMinutes } from '@/lib/services'
+import type { ServiceDef } from '@/lib/services'
+import { calcMinutes, formatMinutes } from '@/lib/services'
 
 interface QueueStateDB {
   entries: QueueEntry[]
   currentTicket: number
   lastCalledId: string | null
   serviceDurations: Record<string, number>
+  services: ServiceDef[]
 }
 
 interface LastAdded extends QueueEntry {
@@ -119,7 +121,7 @@ export default function AdminPage() {
     window.location.href = '/admin/login'
   }
 
-  const durations = state?.serviceDurations
+  const durations = state?.serviceDurations ?? {}
   const estimatedMinutes = calcMinutes(selectedServices, durations)
 
   if (!state) {
@@ -130,6 +132,8 @@ export default function AdminPage() {
     )
   }
 
+  const services = state.services
+  const serviceMap = Object.fromEntries(services.map((s) => [s.id, s]))
   const called = state.entries.find((e) => e.id === state.lastCalledId)
   const waiting = state.entries.filter((e) => e.status === 'waiting')
   const served = state.entries.filter((e) => e.status === 'served')
@@ -223,7 +227,6 @@ export default function AdminPage() {
           </h2>
 
           <form onSubmit={addPatient} className="space-y-4">
-            {/* Name */}
             <input
               ref={inputRef}
               type="text"
@@ -238,7 +241,7 @@ export default function AdminPage() {
             <div>
               <p className="text-zinc-400 text-xs mb-2 uppercase tracking-wide">Serviços</p>
               <div className="grid grid-cols-2 gap-2">
-                {SERVICES.map((s) => {
+                {services.map((s) => {
                   const active = selectedServices.includes(s.id)
                   return (
                     <button
@@ -288,7 +291,9 @@ export default function AdminPage() {
             <div className="mt-4 bg-zinc-800 border border-zinc-700 rounded-xl p-4">
               {lastAddedPosition ? (
                 <div className="text-center mb-4">
-                  <p className="text-amber-400 font-black" style={{ fontSize: 32 }}>{lastAdded.name} adicionado na {lastAddedPosition}ª posição</p>
+                  <p className="text-amber-400 font-black" style={{ fontSize: 32 }}>
+                    {lastAdded.name} adicionado na {lastAddedPosition}ª posição
+                  </p>
                 </div>
               ) : null}
               <div className="flex gap-4 items-center">
@@ -323,11 +328,8 @@ export default function AdminPage() {
                   <p className="font-bold text-zinc-100 text-lg">{called.name}</p>
                   {called.services.length > 0 && (
                     <p className="text-xs text-zinc-500 mt-0.5">
-                      {called.services
-                        .map((id) => SERVICES.find((s) => s.id === id)?.label)
-                        .filter(Boolean)
-                        .join(' · ')}{' '}
-                      · {formatMinutes(calcMinutes(called.services))}
+                      {called.services.map((id) => serviceMap[id]?.label).filter(Boolean).join(' · ')}
+                      {' '}· {formatMinutes(calcMinutes(called.services, durations))}
                     </p>
                   )}
                 </div>
@@ -377,8 +379,8 @@ export default function AdminPage() {
                       <p className="text-zinc-200 font-medium truncate">{e.name}</p>
                       {e.services.length > 0 && (
                         <p className="text-xs text-zinc-600 truncate">
-                          {e.services.map((id) => SERVICES.find((s) => s.id === id)?.emoji).join(' ')}
-                          {' '}{e.services.map((id) => SERVICES.find((s) => s.id === id)?.label).filter(Boolean).join(' · ')}
+                          {e.services.map((id) => serviceMap[id]?.emoji).join(' ')}
+                          {' '}{e.services.map((id) => serviceMap[id]?.label).filter(Boolean).join(' · ')}
                         </p>
                       )}
                     </div>

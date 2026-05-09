@@ -9,7 +9,6 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 export default prisma
 
-// Seed initial config rows if missing
 export async function initDB() {
   await prisma.queueConfig.upsert({
     where: { key: 'current_ticket' },
@@ -21,20 +20,18 @@ export async function initDB() {
     update: {},
     create: { key: 'last_called_id', value: null },
   })
-  for (const s of SERVICES) {
-    await prisma.queueConfig.upsert({
-      where: { key: `svc_${s.id}` },
-      update: {},
-      create: { key: `svc_${s.id}`, value: String(s.minutes) },
-    })
+  // Seed services table if empty
+  const count = await prisma.service.count()
+  if (count === 0) {
+    await prisma.service.createMany({ data: SERVICES })
   }
 }
 
+export async function getServices() {
+  return prisma.service.findMany({ orderBy: { ord: 'asc' } })
+}
+
 export async function getServiceDurations(): Promise<Record<string, number>> {
-  const rows = await prisma.queueConfig.findMany({
-    where: { key: { startsWith: 'svc_' } },
-  })
-  return Object.fromEntries(
-    rows.map((r) => [r.key.replace('svc_', ''), parseInt(r.value ?? '0')]),
-  )
+  const services = await getServices()
+  return Object.fromEntries(services.map((s) => [s.id, s.minutes]))
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -32,8 +33,15 @@ export default function LoginPage() {
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-8">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">✂️</div>
-          <h1 className="text-2xl font-black text-zinc-100">Canto do Cabelo</h1>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/image.png"
+              alt="Canto do Cabelo"
+              width={180}
+              height={80}
+              className="object-contain rounded-lg"
+            />
+          </div>
           <p className="text-zinc-500 text-sm mt-1">Acesso restrito ao dono</p>
         </div>
 

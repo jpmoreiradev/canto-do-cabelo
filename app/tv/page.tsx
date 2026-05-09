@@ -32,7 +32,7 @@ export default function TVPage() {
       if (res.ok) setState(await res.json())
     }
     fetchState()
-    const id = setInterval(fetchState, 5000)
+    const id = setInterval(fetchState, 10000)
     return () => clearInterval(id)
   }, [])
 
