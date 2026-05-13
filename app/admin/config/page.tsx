@@ -83,7 +83,7 @@ export default function ConfigPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 p-6">
+    <main className="min-h-screen bg-zinc-950 p-4 md:p-6">
       <div className="max-w-lg mx-auto space-y-5">
         <div className="flex items-center justify-between">
           <div>
@@ -115,20 +115,20 @@ export default function ConfigPage() {
               )}
 
               {services.map((s) => (
-                <div key={s.id} className="px-5 py-4 border-b border-zinc-800/60 last:border-0 space-y-3">
-                  <div className="flex items-center gap-3">
+                <div key={s.id} className="px-4 py-4 border-b border-zinc-800/60 last:border-0 space-y-3">
+                  <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={String(field(s.id, 'emoji'))}
                       onChange={(e) => setField(s.id, 'emoji', e.target.value)}
-                      className="w-14 bg-zinc-800 border border-zinc-700 rounded-xl px-2 py-2 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors text-lg"
+                      className="w-12 bg-zinc-800 border border-zinc-700 rounded-xl px-1 py-2 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors text-lg shrink-0"
                       maxLength={4}
                     />
                     <input
                       type="text"
                       value={String(field(s.id, 'label'))}
                       onChange={(e) => setField(s.id, 'label', e.target.value)}
-                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 focus:border-amber-500 focus:outline-none transition-colors"
+                      className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 focus:border-amber-500 focus:outline-none transition-colors"
                     />
                     <div className="flex items-center gap-1 shrink-0">
                       <input
@@ -137,22 +137,22 @@ export default function ConfigPage() {
                         max={300}
                         value={String(field(s.id, 'minutes'))}
                         onChange={(e) => setField(s.id, 'minutes', Number(e.target.value))}
-                        className="w-16 bg-zinc-800 border border-zinc-700 rounded-xl px-2 py-2 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors"
+                        className="w-14 bg-zinc-800 border border-zinc-700 rounded-xl px-2 py-2 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors"
                       />
                       <span className="text-zinc-500 text-xs">min</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-600 font-mono">{s.id}</span>
-                    <div className="flex gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-zinc-600 font-mono truncate">{s.id}</span>
+                    <div className="flex gap-2 shrink-0">
                       {confirmDeleteId === s.id ? (
                         <>
                           <button
                             onClick={() => deleteService(s.id)}
-                            className="text-xs text-red-500 border border-red-500/50 px-3 py-1 rounded-lg transition-colors hover:border-red-400"
+                            className="text-xs text-red-500 border border-red-500/50 px-2.5 py-1 rounded-lg transition-colors hover:border-red-400"
                           >
-                            confirmar exclusão
+                            confirmar
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(null)}
@@ -191,21 +191,21 @@ export default function ConfigPage() {
               </p>
 
               <form onSubmit={addService} className="space-y-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <input
                     type="text"
                     placeholder="✂️"
                     value={newSvc.emoji}
                     onChange={(e) => setNewSvc((p) => ({ ...p, emoji: e.target.value }))}
                     maxLength={4}
-                    className="w-14 bg-zinc-800 border border-zinc-700 rounded-xl px-2 py-2.5 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors text-lg"
+                    className="w-12 bg-zinc-800 border border-zinc-700 rounded-xl px-1 py-2.5 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors text-lg shrink-0"
                   />
                   <input
                     type="text"
                     placeholder="Nome do serviço"
                     value={newSvc.label}
                     onChange={(e) => setNewSvc((p) => ({ ...p, label: e.target.value }))}
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
+                    className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none transition-colors"
                   />
                   <div className="flex items-center gap-1 shrink-0">
                     <input
@@ -215,7 +215,7 @@ export default function ConfigPage() {
                       max={300}
                       value={newSvc.minutes}
                       onChange={(e) => setNewSvc((p) => ({ ...p, minutes: e.target.value }))}
-                      className="w-16 bg-zinc-800 border border-zinc-700 rounded-xl px-2 py-2.5 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors"
+                      className="w-14 bg-zinc-800 border border-zinc-700 rounded-xl px-2 py-2.5 text-zinc-100 text-center focus:border-amber-500 focus:outline-none transition-colors"
                     />
                     <span className="text-zinc-500 text-xs">min</span>
                   </div>

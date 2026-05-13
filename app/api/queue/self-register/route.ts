@@ -11,7 +11,20 @@ export async function POST(req: NextRequest) {
 
   const payload = await verifyTvToken(token)
   if (!payload) {
-    return NextResponse.json({ error: 'QR code expirado ou inválido' }, { status: 401 })
+    return NextResponse.json({ error: 'Link expirado ou inválido' }, { status: 401 })
+  }
+
+  // Verifica se o token é válido: pode ser o token da TV ou o token de compartilhamento
+  const [tvConfig, shareConfig] = await Promise.all([
+    prisma.queueConfig.findUnique({ where: { key: 'tv_display_token' } }),
+    prisma.queueConfig.findUnique({ where: { key: 'active_share_token' } }),
+  ])
+
+  const isTvToken = tvConfig?.value === token
+  const isShareToken = shareConfig?.value === token
+
+  if (!isTvToken && !isShareToken) {
+    return NextResponse.json({ error: 'Este link já foi utilizado' }, { status: 401 })
   }
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -21,6 +34,10 @@ export async function POST(req: NextRequest) {
   const serviceList: string[] = Array.isArray(services) ? services : []
 
   const entry = await prisma.$transaction(async (tx) => {
+    // Se for link de compartilhamento, invalida após o uso (uso único)
+    if (isShareToken) {
+      await tx.queueConfig.update({ where: { key: 'active_share_token' }, data: { value: null } })
+    }
     const updated = await tx.$queryRaw<{ value: string }[]>`
       UPDATE queue_config SET value = (value::int + 1)::text
       WHERE key = 'current_ticket' RETURNING value

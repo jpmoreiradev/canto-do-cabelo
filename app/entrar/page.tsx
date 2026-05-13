@@ -58,7 +58,7 @@ function EntrarForm() {
       router.push(`/acompanhar?id=${entry.id}`)
     } else {
       const data = await res.json().catch(() => ({}))
-      setError(data.error ?? 'Erro ao entrar na fila. Tente escanear o QR code novamente.')
+      setError(data.error ?? 'Erro ao entrar na fila. Peça um novo link ao atendente.')
       setLoading(false)
     }
   }

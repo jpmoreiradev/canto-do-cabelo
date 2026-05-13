@@ -19,7 +19,7 @@ interface LastAdded extends QueueEntry {
 }
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<'fila' | 'novo'>('fila')
+  const [tab, setTab] = useState<'fila' | 'novo' | 'compartilhar'>('fila')
   const [state, setState] = useState<QueueStateDB | null>(null)
   const [callLoading, setCallLoading] = useState(false)
   const [calledName, setCalledName] = useState<string | null>(null)
@@ -112,7 +112,7 @@ export default function AdminPage() {
   }
 
   async function generateEntryLink() {
-    const res = await fetch('/api/queue/tv-token')
+    const res = await fetch('/api/queue/tv-token?share=1')
     if (res.ok) {
       const { token } = await res.json()
       setEntryLink(`${window.location.origin}/entrar?t=${token}`)
@@ -150,7 +150,7 @@ export default function AdminPage() {
       {/* Toast chamada */}
       {calledName && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-zinc-950 font-black px-6 py-3 rounded-2xl shadow-2xl text-lg flex items-center gap-2">
-          📢 {calledName} chamado!
+          ✂️ {calledName} em atendimento!
         </div>
       )}
 
@@ -161,8 +161,8 @@ export default function AdminPage() {
             <h1 className="text-xl font-black text-zinc-100">Painel</h1>
             <p className="text-zinc-500 text-xs">Canto do Cabelo</p>
           </div>
-          <div className="flex gap-2">
-            <a href="/fila" target="_blank" className="text-xs text-zinc-400 border border-zinc-700 px-2.5 py-1.5 rounded-lg hover:border-zinc-500 transition-colors">Fila pública</a>
+          <div className="flex flex-wrap gap-1.5 justify-end">
+            <a href="/fila" target="_blank" className="text-xs text-zinc-400 border border-zinc-700 px-2.5 py-1.5 rounded-lg hover:border-zinc-500 transition-colors">Fila</a>
             <a href="/tv" target="_blank" className="text-xs text-amber-400 border border-zinc-700 px-2.5 py-1.5 rounded-lg hover:border-amber-500 transition-colors">TV</a>
             <a href="/admin/config" className="text-xs text-zinc-400 border border-zinc-700 px-2.5 py-1.5 rounded-lg hover:border-zinc-500 transition-colors">Config</a>
             <button onClick={logout} className="text-xs text-zinc-500 border border-zinc-800 px-2.5 py-1.5 rounded-lg hover:border-zinc-600 transition-colors">Sair</button>
@@ -182,7 +182,10 @@ export default function AdminPage() {
             Fila
           </TabBtn>
           <TabBtn active={tab === 'novo'} onClick={() => setTab('novo')}>
-            Novo Cliente
+            Adicionar Cliente
+          </TabBtn>
+          <TabBtn active={tab === 'compartilhar'} onClick={() => setTab('compartilhar')}>
+            Compartilhar
           </TabBtn>
         </div>
 
@@ -222,9 +225,9 @@ export default function AdminPage() {
               className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-black py-4 rounded-2xl text-lg transition-colors"
             >
               {callLoading
-                ? 'Chamando...'
+                ? 'Atendendo...'
                 : waiting.length > 0
-                  ? `Chamar Próximo — ${waiting[0].name}`
+                  ? `Atender Próximo — ${waiting[0].name}`
                   : 'Fila Vazia'}
             </button>
 
@@ -267,13 +270,13 @@ export default function AdminPage() {
                             <span className="text-xs text-zinc-500">{formatMinutes(waitBefore)}</span>
                           ) : null}
 
-                          {/* Chamar direto */}
+                          {/* Atender direto */}
                           <button
                             onClick={() => callNext(e.id)}
                             disabled={callLoading}
                             className="text-xs text-amber-400 border border-amber-500/30 hover:border-amber-400 px-2 py-0.5 rounded-full transition-colors disabled:opacity-40"
                           >
-                            chamar
+                            atender
                           </button>
 
                           {/* Remover */}
@@ -310,7 +313,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── TAB NOVO CLIENTE ── */}
+        {/* ── TAB ADICIONAR CLIENTE ── */}
         {tab === 'novo' && (
           <div className="space-y-4">
             {/* Formulário */}
@@ -340,15 +343,15 @@ export default function AdminPage() {
                           key={s.id}
                           type="button"
                           onClick={() => toggleService(s.id)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm transition-all ${
+                          className={`flex items-center justify-between gap-1 px-3 py-2.5 rounded-xl border transition-all ${
                             active
                               ? 'bg-amber-500/15 border-amber-500 text-amber-400'
                               : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
                           }`}
                         >
-                          <span>{s.emoji} {s.label}</span>
-                          <span className={`text-xs ${active ? 'text-amber-400' : 'text-zinc-600'}`}>
-                            {s.minutes} min
+                          <span className="text-xs font-medium truncate min-w-0">{s.emoji} {s.label}</span>
+                          <span className={`text-xs shrink-0 ${active ? 'text-amber-400' : 'text-zinc-600'}`}>
+                            {s.minutes}m
                           </span>
                         </button>
                       )
@@ -356,10 +359,10 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-center">
-                    <span className="text-zinc-500 text-xs">Tempo estimado </span>
-                    <span className={`font-bold ${estimatedMinutes > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
+                <div className="flex items-stretch gap-3">
+                  <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 flex flex-col items-center justify-center">
+                    <span className="text-zinc-500 text-xs leading-tight">Tempo estimado</span>
+                    <span className={`font-bold leading-tight ${estimatedMinutes > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
                       {formatMinutes(estimatedMinutes)}
                     </span>
                   </div>
@@ -383,11 +386,11 @@ export default function AdminPage() {
                       {lastAdded.name} — {lastAddedPosition}º na fila
                     </p>
                   ) : null}
-                  <div className="flex gap-4 items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
                     <div className="bg-white p-2 rounded-lg shrink-0">
                       <QRCodeSVG value={lastAdded.trackingUrl} size={96} />
                     </div>
-                    <div className="flex flex-col gap-2 flex-1 min-w-0">
+                    <div className="flex flex-col gap-2 flex-1 min-w-0 w-full">
                       <code className="text-xs text-zinc-400 bg-zinc-900 rounded-lg px-3 py-2 truncate block">
                         {lastAdded.trackingUrl}
                       </code>
@@ -403,11 +406,22 @@ export default function AdminPage() {
               )}
             </div>
 
-            {/* Link WhatsApp */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4">
-                Link de entrada (WhatsApp)
-              </h2>
+          </div>
+        )}
+
+        {/* ── TAB COMPARTILHAR ── */}
+        {tab === 'compartilhar' && (
+          <div className="space-y-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4">
+              <div>
+                <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+                  Link de auto-cadastro
+                </h2>
+                <p className="text-zinc-600 text-xs mt-1">
+                  Válido para uma única pessoa. Após o uso, gere um novo.
+                </p>
+              </div>
+
               {entryLink ? (
                 <div className="space-y-3">
                   <code className="text-xs text-zinc-400 bg-zinc-800 rounded-lg px-3 py-2 block truncate">
@@ -428,7 +442,7 @@ export default function AdminPage() {
                       onClick={generateEntryLink}
                       className="text-sm text-zinc-400 border border-zinc-700 px-4 py-2.5 rounded-xl hover:border-zinc-500 transition-colors"
                     >
-                      Renovar
+                      Novo link
                     </button>
                   </div>
                 </div>
