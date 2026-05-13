@@ -31,7 +31,13 @@ export default function AdminPage() {
   const [lastAdded, setLastAdded] = useState<LastAdded | null>(null)
   const [entryLink, setEntryLink] = useState('')
   const [entryLinkCopied, setEntryLinkCopied] = useState(false)
+  const [copyToast, setCopyToast] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  function showCopyToast() {
+    setCopyToast(true)
+    setTimeout(() => setCopyToast(false), 2500)
+  }
 
   async function fetchState() {
     const res = await fetch('/api/queue')
@@ -151,6 +157,13 @@ export default function AdminPage() {
       {calledName && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-zinc-950 font-black px-6 py-3 rounded-2xl shadow-2xl text-lg flex items-center gap-2">
           ✂️ {calledName} em atendimento!
+        </div>
+      )}
+
+      {/* Toast cópia */}
+      {copyToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-zinc-800 border border-zinc-700 text-zinc-100 font-semibold px-5 py-2.5 rounded-2xl shadow-2xl text-sm flex items-center gap-2">
+          ✅ Link copiado!
         </div>
       )}
 
@@ -395,7 +408,7 @@ export default function AdminPage() {
                         {lastAdded.trackingUrl}
                       </code>
                       <button
-                        onClick={() => navigator.clipboard.writeText(lastAdded.trackingUrl)}
+                        onClick={() => { navigator.clipboard.writeText(lastAdded.trackingUrl); showCopyToast() }}
                         className="text-xs text-zinc-300 bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg transition-colors"
                       >
                         Copiar link
@@ -433,6 +446,7 @@ export default function AdminPage() {
                         await navigator.clipboard.writeText(entryLink)
                         setEntryLinkCopied(true)
                         setTimeout(() => setEntryLinkCopied(false), 3000)
+                        showCopyToast()
                       }}
                       className="flex-1 text-sm font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 px-4 py-2.5 rounded-xl transition-colors"
                     >

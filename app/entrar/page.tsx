@@ -101,29 +101,36 @@ function EntrarForm() {
 
             {/* Services */}
             <div className="space-y-2">
-              <label className="text-xs text-zinc-500 uppercase tracking-wide">Serviços</label>
+              <div>
+                <label className="text-xs text-zinc-500 uppercase tracking-wide">Serviços</label>
+                <p className="text-zinc-500 text-sm mt-1">Selecione um ou mais serviços que deseja realizar.</p>
+              </div>
               <div className="grid grid-cols-1 gap-2">
                 {SERVICES.map((s) => {
                   const active = selectedServices.includes(s.id)
                   return (
-                    <button
+                    <label
                       key={s.id}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => toggleService(s.id)}
-                      className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-all ${
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
                         active
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-400'
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                      }`}
+                          ? 'bg-amber-500/15 border-amber-500'
+                          : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                      } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
                     >
-                      <span>
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => toggleService(s.id)}
+                        disabled={disabled}
+                        className="w-4 h-4 accent-amber-500 shrink-0"
+                      />
+                      <span className={`text-sm flex-1 ${active ? 'text-amber-400' : 'text-zinc-400'}`}>
                         {s.emoji} {s.label}
                       </span>
-                      <span className={`text-xs ${active ? 'text-amber-400' : 'text-zinc-600'}`}>
+                      <span className={`text-xs shrink-0 ${active ? 'text-amber-400' : 'text-zinc-600'}`}>
                         {s.minutes} min
                       </span>
-                    </button>
+                    </label>
                   )
                 })}
               </div>
