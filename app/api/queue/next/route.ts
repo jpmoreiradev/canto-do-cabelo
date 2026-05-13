@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}))
+  const specificId: string | null = body?.id ?? null
+
   const entry = await prisma.$transaction(async (tx) => {
-    const next = await tx.queueEntry.findFirst({
-      where: { status: 'waiting' },
-      orderBy: { ticket: 'asc' },
-    })
+    const next = specificId
+      ? await tx.queueEntry.findFirst({ where: { id: specificId, status: 'waiting' } })
+      : await tx.queueEntry.findFirst({ where: { status: 'waiting' }, orderBy: { ticket: 'asc' } })
 
     if (!next) return null
 
@@ -28,7 +30,7 @@ export async function POST() {
     return updated
   })
 
-  if (!entry) return NextResponse.json({ error: 'Fila vazia' }, { status: 404 })
+  if (!entry) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
   return NextResponse.json({
     ...entry,
