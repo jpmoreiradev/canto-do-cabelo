@@ -87,7 +87,6 @@ export default function TVPage() {
               <p className="text-zinc-500 uppercase tracking-widest text-sm md:text-xl font-semibold">
                 Sendo atendido agora
               </p>
-              <p className="text-6xl md:text-8xl font-black text-amber-400 leading-none">{called.ticket}</p>
               <p className="text-3xl md:text-4xl font-bold text-zinc-100 text-center">{called.name}</p>
             </div>
           ) : (
@@ -100,7 +99,7 @@ export default function TVPage() {
         {/* Coluna direita: fila + QR */}
         <div className="md:w-80 flex flex-col gap-4">
           <h2 className="text-zinc-500 uppercase tracking-widest text-xs font-semibold">
-            Na fila ({waiting.length})
+            Na fila
           </h2>
 
           <div className="flex flex-col gap-2 md:overflow-y-auto md:flex-1">
