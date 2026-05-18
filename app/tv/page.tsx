@@ -141,7 +141,7 @@ export default function TVPage() {
                 Entre na fila pelo celular
               </p>
               <div className="bg-white p-3 rounded-xl">
-                <QRCodeSVG value={qrUrl} size={140} />
+                <QRCodeSVG value={qrUrl} size={220} />
               </div>
               <p className="text-zinc-600 text-xs text-center">Escaneie a câmera do celular</p>
             </div>
